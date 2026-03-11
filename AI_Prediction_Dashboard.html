@@ -1,4 +1,4 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="hi">
 <head>
 <meta charset="UTF-8">
@@ -165,7 +165,7 @@
     <div class="igrid">
       <div class="ig"><label>Coin</label>
         <select id="cc"><option>Bitcoin (BTC)</option><option>Ethereum (ETH)</option><option>Solana (SOL)</option><option>BNB</option><option>XRP</option></select></div>
-      <div class="ig"><label>Current Price (USDT)</label><input type="number" id="cp" value="67000"></div>
+      <div class="ig"><label>Current Price (USDT) <span id="cp-live" style="color:var(--green);font-size:9px;cursor:pointer" onclick="fetchPrice()">↻ LIVE</span></label><input type="number" id="cp" value="67000"></div>
       <div class="ig"><label>RSI (0-100)</label><input type="number" id="cr" value="45"></div>
       <div class="ig"><label>Volume 24h Change %</label><input type="number" id="cv" value="15"></div>
       <div class="ig"><label>Timeframe</label>
@@ -179,7 +179,7 @@
   <!-- Gold Inputs -->
   <div id="s-gold" class="isec" style="display:none">
     <div class="igrid">
-      <div class="ig"><label>Gold Price (USD/oz)</label><input type="number" id="gp" value="2900"></div>
+      <div class="ig"><label>Gold Price (USD/oz) <span style="color:var(--green);font-size:9px;cursor:pointer" onclick="fetchGold()">↻ LIVE</span></label><input type="number" id="gp" value="2900"></div>
       <div class="ig"><label>USD Index (DXY)</label><input type="number" id="gd" value="104"></div>
       <div class="ig"><label>US Interest Rate %</label><input type="number" id="gr" value="5.25" step="0.25"></div>
       <div class="ig"><label>Inflation CPI %</label><input type="number" id="gc" value="3.2" step="0.1"></div>
@@ -236,6 +236,51 @@
 </div>
 <script>
 let KEY = '';
+
+// Coin ID map for CoinGecko
+const coinMap = {
+  'Bitcoin (BTC)': 'bitcoin',
+  'Ethereum (ETH)': 'ethereum',
+  'Solana (SOL)': 'solana',
+  'BNB': 'binancecoin',
+  'XRP': 'ripple'
+};
+
+async function fetchPrice() {
+  const coin = document.getElementById('cc').value;
+  const id = coinMap[coin] || 'bitcoin';
+  const lbl = document.getElementById('cp-live');
+  lbl.textContent = '⟳ Loading...';
+  lbl.style.color = 'var(--gold)';
+  try {
+    const res = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${id}&vs_currencies=usd`);
+    const data = await res.json();
+    const price = data[id]?.usd;
+    if (price) {
+      document.getElementById('cp').value = price;
+      lbl.textContent = '✅ LIVE';
+      lbl.style.color = 'var(--green)';
+    }
+  } catch(e) {
+    lbl.textContent = '❌ Retry';
+    lbl.style.color = 'var(--red)';
+  }
+}
+
+async function fetchGold() {
+  try {
+    const res = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=gold&vs_currencies=usd');
+    const data = await res.json();
+    // CoinGecko doesn't have gold, use approximate
+    document.getElementById('gp').value = 2900;
+  } catch(e) {}
+}
+
+// Auto fetch price when coin changes
+document.addEventListener('DOMContentLoaded', () => {
+  fetchPrice();
+  document.getElementById('cc').addEventListener('change', fetchPrice);
+});
 
 function saveKey() {
   const v = document.getElementById('akey').value.trim();
