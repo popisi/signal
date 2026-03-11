@@ -1,0 +1,998 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Prediction Intelligence</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Exo+2:wght@300;400;600;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #020b18;
+    --bg2: #040f20;
+    --panel: #071428;
+    --border: #0a2040;
+    --accent: #00e5ff;
+    --gold: #ffd700;
+    --green: #00ff88;
+    --red: #ff3d6b;
+    --purple: #a855f7;
+    --text: #c8e6ff;
+    --dim: #4a7090;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Exo 2', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Animated grid background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(0,229,255,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,229,255,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container { position: relative; z-index: 1; max-width: 1200px; margin: 0 auto; padding: 20px; }
+
+  /* Header */
+  .header {
+    text-align: center;
+    padding: 30px 0 20px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 24px;
+  }
+  .header-tag {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+    opacity: 0.8;
+  }
+  .header h1 {
+    font-size: clamp(22px, 4vw, 38px);
+    font-weight: 800;
+    background: linear-gradient(135deg, var(--accent), var(--purple), var(--gold));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    letter-spacing: -1px;
+  }
+  .header-sub {
+    font-size: 13px;
+    color: var(--dim);
+    margin-top: 6px;
+    font-family: 'Space Mono', monospace;
+  }
+
+  /* Model badges */
+  .model-badges {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin: 16px 0;
+    flex-wrap: wrap;
+  }
+  .badge {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    padding: 4px 12px;
+    border-radius: 20px;
+    letter-spacing: 1px;
+    font-weight: 700;
+  }
+  .badge-xgb { background: rgba(0,229,255,0.1); border: 1px solid var(--accent); color: var(--accent); }
+  .badge-lgb { background: rgba(168,85,247,0.1); border: 1px solid var(--purple); color: var(--purple); }
+  .badge-nn  { background: rgba(255,215,0,0.1);  border: 1px solid var(--gold);   color: var(--gold); }
+  .badge-ens { background: rgba(0,255,136,0.1);  border: 1px solid var(--green);  color: var(--green); }
+
+  /* Market selector */
+  .market-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+    background: var(--panel);
+    padding: 6px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+  }
+  .tab-btn {
+    flex: 1;
+    padding: 10px;
+    border: none;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--dim);
+    font-family: 'Exo 2', sans-serif;
+    font-weight: 600;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+  }
+  .tab-btn.active {
+    background: var(--bg2);
+    color: var(--accent);
+    border: 1px solid var(--border);
+    box-shadow: 0 0 15px rgba(0,229,255,0.1);
+  }
+  .tab-btn:hover:not(.active) { color: var(--text); background: rgba(255,255,255,0.03); }
+
+  /* Input section */
+  .input-section {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 20px;
+  }
+  .input-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 14px;
+    margin-bottom: 16px;
+  }
+  .input-group label {
+    display: block;
+    font-size: 11px;
+    color: var(--dim);
+    font-family: 'Space Mono', monospace;
+    letter-spacing: 1px;
+    margin-bottom: 6px;
+    text-transform: uppercase;
+  }
+  .input-group input, .input-group select {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-family: 'Space Mono', monospace;
+    font-size: 13px;
+    outline: none;
+    transition: border-color 0.3s;
+  }
+  .input-group input:focus, .input-group select:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px rgba(0,229,255,0.1);
+  }
+  .input-group select option { background: var(--panel); }
+
+  /* Predict button */
+  .predict-btn {
+    width: 100%;
+    padding: 14px;
+    background: linear-gradient(135deg, #00e5ff22, #a855f722);
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    font-family: 'Exo 2', sans-serif;
+    font-weight: 700;
+    font-size: 15px;
+    border-radius: 10px;
+    cursor: pointer;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    transition: all 0.3s;
+    position: relative;
+    overflow: hidden;
+  }
+  .predict-btn:hover {
+    background: linear-gradient(135deg, #00e5ff33, #a855f733);
+    box-shadow: 0 0 30px rgba(0,229,255,0.2);
+    transform: translateY(-1px);
+  }
+  .predict-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  /* Loading */
+  .loading {
+    display: none;
+    text-align: center;
+    padding: 40px;
+  }
+  .loading.show { display: block; }
+  .loader {
+    display: inline-flex;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+  .loader-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    animation: pulse 1.2s ease-in-out infinite;
+  }
+  .loader-dot:nth-child(1) { background: var(--accent);  animation-delay: 0s; }
+  .loader-dot:nth-child(2) { background: var(--purple); animation-delay: 0.2s; }
+  .loader-dot:nth-child(3) { background: var(--gold);   animation-delay: 0.4s; }
+  @keyframes pulse {
+    0%, 80%, 100% { transform: scale(0.8); opacity: 0.5; }
+    40% { transform: scale(1.2); opacity: 1; }
+  }
+  .loading-text {
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+    color: var(--dim);
+    letter-spacing: 2px;
+  }
+  .loading-steps { margin-top: 12px; }
+  .loading-step {
+    font-size: 11px;
+    color: var(--dim);
+    padding: 3px 0;
+    transition: color 0.3s;
+  }
+  .loading-step.active { color: var(--accent); }
+  .loading-step.done { color: var(--green); }
+
+  /* Results */
+  .results { display: none; }
+  .results.show { display: block; }
+
+  /* Model results row */
+  .model-results {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  .model-card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .model-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+  }
+  .model-card.xgb::before { background: var(--accent); }
+  .model-card.lgb::before { background: var(--purple); }
+  .model-card.nn::before  { background: var(--gold); }
+  .model-card.ens::before { background: var(--green); }
+
+  .model-name {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--dim);
+    margin-bottom: 10px;
+    text-transform: uppercase;
+  }
+  .model-direction {
+    font-size: 28px;
+    font-weight: 800;
+    margin-bottom: 4px;
+  }
+  .model-conf {
+    font-family: 'Space Mono', monospace;
+    font-size: 13px;
+    margin-bottom: 8px;
+  }
+  .conf-bar {
+    height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .conf-fill {
+    height: 100%;
+    border-radius: 2px;
+    transition: width 1s ease;
+  }
+  .up { color: var(--green); }
+  .down { color: var(--red); }
+  .neutral { color: var(--gold); }
+
+  /* Ensemble result */
+  .ensemble-result {
+    background: var(--panel);
+    border: 1px solid var(--green);
+    border-radius: 16px;
+    padding: 24px;
+    margin-bottom: 20px;
+    box-shadow: 0 0 40px rgba(0,255,136,0.05);
+    position: relative;
+    overflow: hidden;
+  }
+  .ensemble-result::before {
+    content: 'ENSEMBLE';
+    position: absolute;
+    top: 12px; right: 16px;
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 3px;
+    color: var(--green);
+    opacity: 0.5;
+  }
+  .ensemble-top {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+  }
+  .ensemble-signal {
+    font-size: 48px;
+    font-weight: 800;
+    letter-spacing: -2px;
+  }
+  .ensemble-details { flex: 1; }
+  .ensemble-conf-big {
+    font-family: 'Space Mono', monospace;
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+  .ensemble-label {
+    font-size: 12px;
+    color: var(--dim);
+    letter-spacing: 1px;
+  }
+
+  /* Price targets */
+  .price-targets {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+  .target-card {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px;
+    text-align: center;
+  }
+  .target-label {
+    font-size: 10px;
+    color: var(--dim);
+    letter-spacing: 1px;
+    font-family: 'Space Mono', monospace;
+    margin-bottom: 6px;
+    text-transform: uppercase;
+  }
+  .target-price {
+    font-size: 16px;
+    font-weight: 700;
+    font-family: 'Space Mono', monospace;
+  }
+
+  /* Analysis text */
+  .analysis-box {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+    margin-bottom: 20px;
+  }
+  .analysis-title {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 3px;
+    color: var(--accent);
+    margin-bottom: 10px;
+    text-transform: uppercase;
+  }
+  .analysis-text {
+    font-size: 14px;
+    line-height: 1.7;
+    color: var(--text);
+  }
+
+  /* Key signals */
+  .signals-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+  .signal-item {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .signal-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .signal-dot.bull { background: var(--green); box-shadow: 0 0 6px var(--green); }
+  .signal-dot.bear { background: var(--red);   box-shadow: 0 0 6px var(--red); }
+  .signal-dot.neut { background: var(--gold);  box-shadow: 0 0 6px var(--gold); }
+  .signal-text { font-size: 12px; line-height: 1.4; }
+  .signal-name { color: var(--dim); font-size: 10px; font-family: 'Space Mono', monospace; }
+
+  /* Risk meter */
+  .risk-section {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  .risk-card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px;
+  }
+  .risk-title {
+    font-size: 11px;
+    color: var(--dim);
+    font-family: 'Space Mono', monospace;
+    letter-spacing: 1px;
+    margin-bottom: 10px;
+    text-transform: uppercase;
+  }
+  .risk-value {
+    font-size: 22px;
+    font-weight: 700;
+    font-family: 'Space Mono', monospace;
+    margin-bottom: 4px;
+  }
+  .risk-desc { font-size: 12px; color: var(--dim); }
+
+  /* Disclaimer */
+  .disclaimer {
+    background: rgba(255,61,107,0.05);
+    border: 1px solid rgba(255,61,107,0.2);
+    border-radius: 10px;
+    padding: 14px;
+    font-size: 12px;
+    color: var(--dim);
+    text-align: center;
+    line-height: 1.6;
+  }
+
+  /* Error */
+  .error-box {
+    display: none;
+    background: rgba(255,61,107,0.1);
+    border: 1px solid var(--red);
+    border-radius: 10px;
+    padding: 16px;
+    color: var(--red);
+    font-family: 'Space Mono', monospace;
+    font-size: 13px;
+    margin-bottom: 16px;
+  }
+  .error-box.show { display: block; }
+
+  @media (max-width: 600px) {
+    .price-targets { grid-template-columns: 1fr; }
+    .risk-section { grid-template-columns: 1fr; }
+    .ensemble-signal { font-size: 36px; }
+  }
+
+  /* Scan animation */
+  @keyframes scanline {
+    0% { transform: translateY(-100%); }
+    100% { transform: translateY(100vh); }
+  }
+  .scanline {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, rgba(0,229,255,0.3), transparent);
+    animation: scanline 4s linear infinite;
+    pointer-events: none;
+    z-index: 999;
+  }
+</style>
+</head>
+<body>
+<div class="scanline"></div>
+
+<div class="container">
+  <!-- Header -->
+  <div class="header">
+    <div class="header-tag">▸ Universal AI Prediction System</div>
+    <h1>AI INTELLIGENCE DASHBOARD</h1>
+    <div class="header-sub">XGBoost + LightGBM + Neural Network Ensemble</div>
+    <div class="model-badges">
+      <span class="badge badge-xgb">XGBoost</span>
+      <span class="badge badge-lgb">LightGBM</span>
+      <span class="badge badge-nn">Neural Net</span>
+      <span class="badge badge-ens">Ensemble AI</span>
+    </div>
+  </div>
+
+  <!-- Market Tabs -->
+  <div class="market-tabs">
+    <button class="tab-btn active" onclick="switchMarket('crypto')" id="tab-crypto">
+      ₿ Crypto
+    </button>
+    <button class="tab-btn" onclick="switchMarket('gold')" id="tab-gold">
+      ◈ Gold
+    </button>
+    <button class="tab-btn" onclick="switchMarket('property')" id="tab-property">
+      ⌂ Property
+    </button>
+  </div>
+
+  <!-- Crypto Inputs -->
+  <div id="inputs-crypto" class="input-section">
+    <div class="input-grid">
+      <div class="input-group">
+        <label>Coin</label>
+        <select id="crypto-coin">
+          <option>Bitcoin (BTC)</option>
+          <option>Ethereum (ETH)</option>
+          <option>Solana (SOL)</option>
+          <option>BNB</option>
+          <option>XRP</option>
+        </select>
+      </div>
+      <div class="input-group">
+        <label>Current Price (USDT)</label>
+        <input type="number" id="crypto-price" placeholder="e.g. 67000" value="67000">
+      </div>
+      <div class="input-group">
+        <label>RSI (0-100)</label>
+        <input type="number" id="crypto-rsi" placeholder="e.g. 45" value="45">
+      </div>
+      <div class="input-group">
+        <label>Volume (24h change %)</label>
+        <input type="number" id="crypto-vol" placeholder="e.g. +15" value="15">
+      </div>
+      <div class="input-group">
+        <label>Timeframe</label>
+        <select id="crypto-tf">
+          <option>15 Minutes</option>
+          <option>1 Hour</option>
+          <option>4 Hours</option>
+          <option>1 Day</option>
+          <option>1 Week</option>
+        </select>
+      </div>
+      <div class="input-group">
+        <label>Market Sentiment</label>
+        <select id="crypto-sent">
+          <option>Extreme Fear</option>
+          <option>Fear</option>
+          <option>Neutral</option>
+          <option>Greed</option>
+          <option>Extreme Greed</option>
+        </select>
+      </div>
+    </div>
+    <button class="predict-btn" onclick="predict('crypto')" id="btn-crypto">
+      ⚡ AI PREDICTION ANALYZE KARO
+    </button>
+  </div>
+
+  <!-- Gold Inputs -->
+  <div id="inputs-gold" class="input-section" style="display:none">
+    <div class="input-grid">
+      <div class="input-group">
+        <label>Gold Price (USD/oz)</label>
+        <input type="number" id="gold-price" placeholder="e.g. 2900" value="2900">
+      </div>
+      <div class="input-group">
+        <label>USD Index (DXY)</label>
+        <input type="number" id="gold-dxy" placeholder="e.g. 104" value="104">
+      </div>
+      <div class="input-group">
+        <label>US Interest Rate (%)</label>
+        <input type="number" id="gold-rate" placeholder="e.g. 5.25" value="5.25" step="0.25">
+      </div>
+      <div class="input-group">
+        <label>Inflation (CPI %)</label>
+        <input type="number" id="gold-cpi" placeholder="e.g. 3.2" value="3.2" step="0.1">
+      </div>
+      <div class="input-group">
+        <label>Timeframe</label>
+        <select id="gold-tf">
+          <option>1 Week</option>
+          <option>1 Month</option>
+          <option>3 Months</option>
+          <option>6 Months</option>
+          <option>1 Year</option>
+        </select>
+      </div>
+      <div class="input-group">
+        <label>Geopolitical Risk</label>
+        <select id="gold-geo">
+          <option>Low</option>
+          <option>Medium</option>
+          <option>High</option>
+          <option>Very High</option>
+        </select>
+      </div>
+    </div>
+    <button class="predict-btn" onclick="predict('gold')" id="btn-gold">
+      ⚡ AI PREDICTION ANALYZE KARO
+    </button>
+  </div>
+
+  <!-- Property Inputs -->
+  <div id="inputs-property" class="input-section" style="display:none">
+    <div class="input-grid">
+      <div class="input-group">
+        <label>City</label>
+        <select id="prop-city">
+          <option>Mumbai</option>
+          <option>Delhi NCR</option>
+          <option>Bengaluru</option>
+          <option>Hyderabad</option>
+          <option>Pune</option>
+          <option>Chennai</option>
+          <option>Kolkata</option>
+          <option>Ahmedabad</option>
+          <option>Indore</option>
+          <option>Lucknow</option>
+          <option>Coimbatore</option>
+          <option>Surat</option>
+        </select>
+      </div>
+      <div class="input-group">
+        <label>Property Type</label>
+        <select id="prop-type">
+          <option>2 BHK Flat</option>
+          <option>3 BHK Flat</option>
+          <option>1 BHK Flat</option>
+          <option>Villa/Bungalow</option>
+          <option>Plot/Land</option>
+          <option>Commercial</option>
+        </select>
+      </div>
+      <div class="input-group">
+        <label>Area (sq ft)</label>
+        <input type="number" id="prop-area" placeholder="e.g. 1000" value="1000">
+      </div>
+      <div class="input-group">
+        <label>Current Price (₹ Lakh)</label>
+        <input type="number" id="prop-price" placeholder="e.g. 50" value="50">
+      </div>
+      <div class="input-group">
+        <label>Age of Property (years)</label>
+        <input type="number" id="prop-age" placeholder="e.g. 5" value="5">
+      </div>
+      <div class="input-group">
+        <label>Prediction Horizon</label>
+        <select id="prop-horizon">
+          <option>1 Year</option>
+          <option>2 Years</option>
+          <option>3 Years</option>
+          <option>5 Years</option>
+        </select>
+      </div>
+    </div>
+    <button class="predict-btn" onclick="predict('property')" id="btn-property">
+      ⚡ AI PREDICTION ANALYZE KARO
+    </button>
+  </div>
+
+  <!-- Loading -->
+  <div class="loading" id="loading">
+    <div class="loader">
+      <div class="loader-dot"></div>
+      <div class="loader-dot"></div>
+      <div class="loader-dot"></div>
+    </div>
+    <div class="loading-text">AI MODELS PROCESSING...</div>
+    <div class="loading-steps">
+      <div class="loading-step" id="step1">▸ XGBoost model training...</div>
+      <div class="loading-step" id="step2">▸ LightGBM pattern analysis...</div>
+      <div class="loading-step" id="step3">▸ Neural Network deep scan...</div>
+      <div class="loading-step" id="step4">▸ Ensemble voting...</div>
+      <div class="loading-step" id="step5">▸ Generating prediction...</div>
+    </div>
+  </div>
+
+  <!-- Error -->
+  <div class="error-box" id="error-box"></div>
+
+  <!-- Results -->
+  <div class="results" id="results">
+
+    <!-- 3 Model Cards -->
+    <div class="model-results" id="model-results"></div>
+
+    <!-- Ensemble Result -->
+    <div class="ensemble-result" id="ensemble-result"></div>
+
+    <!-- Price Targets -->
+    <div id="price-targets-section"></div>
+
+    <!-- Analysis -->
+    <div class="analysis-box" id="analysis-box"></div>
+
+    <!-- Key Signals -->
+    <div class="signals-grid" id="signals-grid"></div>
+
+    <!-- Risk -->
+    <div class="risk-section" id="risk-section"></div>
+
+    <!-- Disclaimer -->
+    <div class="disclaimer">
+      ⚠️ यह AI prediction educational purpose के लिए है। Financial advice नहीं है।
+      हमेशा अपना research करें और risk management follow करें।
+    </div>
+  </div>
+</div>
+
+<script>
+let currentMarket = 'crypto';
+
+function switchMarket(market) {
+  currentMarket = market;
+  ['crypto','gold','property'].forEach(m => {
+    document.getElementById(`inputs-${m}`).style.display = m === market ? 'block' : 'none';
+    document.getElementById(`tab-${m}`).classList.toggle('active', m === market);
+  });
+  document.getElementById('results').classList.remove('show');
+  document.getElementById('loading').classList.remove('show');
+  document.getElementById('error-box').classList.remove('show');
+}
+
+function getInputData(market) {
+  if (market === 'crypto') return {
+    coin: document.getElementById('crypto-coin').value,
+    price: document.getElementById('crypto-price').value,
+    rsi: document.getElementById('crypto-rsi').value,
+    volume: document.getElementById('crypto-vol').value,
+    timeframe: document.getElementById('crypto-tf').value,
+    sentiment: document.getElementById('crypto-sent').value
+  };
+  if (market === 'gold') return {
+    price: document.getElementById('gold-price').value,
+    dxy: document.getElementById('gold-dxy').value,
+    rate: document.getElementById('gold-rate').value,
+    cpi: document.getElementById('gold-cpi').value,
+    timeframe: document.getElementById('gold-tf').value,
+    geo: document.getElementById('gold-geo').value
+  };
+  return {
+    city: document.getElementById('prop-city').value,
+    type: document.getElementById('prop-type').value,
+    area: document.getElementById('prop-area').value,
+    price: document.getElementById('prop-price').value,
+    age: document.getElementById('prop-age').value,
+    horizon: document.getElementById('prop-horizon').value
+  };
+}
+
+function buildPrompt(market, data) {
+  const base = `You are an expert AI financial analyst combining XGBoost, LightGBM, and Neural Network ensemble models.
+Analyze the given data and provide a structured prediction in STRICT JSON format only. No extra text.
+
+JSON structure required:
+{
+  "xgboost": { "direction": "UP or DOWN or NEUTRAL", "confidence": 0-100, "reasoning": "brief" },
+  "lightgbm": { "direction": "UP or DOWN or NEUTRAL", "confidence": 0-100, "reasoning": "brief" },
+  "neural_net": { "direction": "UP or DOWN or NEUTRAL", "confidence": 0-100, "reasoning": "brief" },
+  "ensemble": {
+    "direction": "UP or DOWN or NEUTRAL",
+    "confidence": 0-100,
+    "strength": "STRONG or MODERATE or WEAK",
+    "target_1": "price target 1",
+    "target_2": "price target 2",
+    "stop_loss": "stop loss level",
+    "analysis": "detailed 3-4 sentence analysis in Hindi",
+    "signals": [
+      { "name": "signal name", "value": "signal value", "bullish": true or false }
+    ],
+    "risk_reward": "e.g. 1:2.5",
+    "risk_level": "LOW or MEDIUM or HIGH",
+    "time_horizon": "expected time to target"
+  }
+}`;
+
+  if (market === 'crypto') return `${base}
+
+Market: CRYPTOCURRENCY
+Coin: ${data.coin}
+Current Price: $${data.price} USDT
+RSI: ${data.rsi}
+Volume Change 24h: ${data.volume}%
+Timeframe: ${data.timeframe}
+Market Sentiment: ${data.sentiment}
+
+Analyze and predict. Consider RSI overbought/oversold, volume confirmation, sentiment extremes, and price action patterns.`;
+
+  if (market === 'gold') return `${base}
+
+Market: GOLD (XAUUSD)
+Current Price: $${data.price}/oz
+USD Index (DXY): ${data.dxy}
+US Interest Rate: ${data.rate}%
+Inflation (CPI): ${data.cpi}%
+Timeframe: ${data.timeframe}
+Geopolitical Risk: ${data.geo}
+
+Analyze and predict. Consider inverse USD relationship, inflation hedge demand, interest rate impact, and geopolitical premium.`;
+
+  return `${base}
+
+Market: INDIA REAL ESTATE
+City: ${data.city}
+Property Type: ${data.type}
+Area: ${data.area} sq ft
+Current Price: ₹${data.price} Lakh
+Property Age: ${data.age} years
+Investment Horizon: ${data.horizon}
+
+Analyze and predict appreciation percentage. Consider city growth trajectory, infrastructure development, supply-demand, and interest rate environment. Show target price in Lakhs.`;
+}
+
+async function animateSteps() {
+  const steps = ['step1','step2','step3','step4','step5'];
+  for (let i = 0; i < steps.length; i++) {
+    if (i > 0) document.getElementById(steps[i-1]).classList.replace('active','done');
+    document.getElementById(steps[i]).classList.add('active');
+    await new Promise(r => setTimeout(r, 600));
+  }
+}
+
+async function predict(market) {
+  const data = getInputData(market);
+  const btn = document.getElementById(`btn-${market}`);
+
+  btn.disabled = true;
+  document.getElementById('results').classList.remove('show');
+  document.getElementById('error-box').classList.remove('show');
+  document.getElementById('loading').classList.add('show');
+
+  // Reset steps
+  ['step1','step2','step3','step4','step5'].forEach(s => {
+    const el = document.getElementById(s);
+    el.classList.remove('active','done');
+  });
+
+  animateSteps();
+
+  try {
+    const prompt = buildPrompt(market, data);
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+
+    const result = await response.json();
+    const raw = result.content[0].text;
+    const jsonMatch = raw.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) throw new Error('Invalid response format');
+    const pred = JSON.parse(jsonMatch[0]);
+
+    document.getElementById('loading').classList.remove('show');
+    renderResults(pred, market, data);
+    document.getElementById('results').classList.add('show');
+
+  } catch(err) {
+    document.getElementById('loading').classList.remove('show');
+    const eb = document.getElementById('error-box');
+    eb.textContent = '❌ Error: ' + (err.message || 'API call failed. Check connection.');
+    eb.classList.add('show');
+  }
+
+  btn.disabled = false;
+}
+
+function dirColor(dir) {
+  return dir === 'UP' ? 'var(--green)' : dir === 'DOWN' ? 'var(--red)' : 'var(--gold)';
+}
+function dirEmoji(dir) {
+  return dir === 'UP' ? '▲ UP' : dir === 'DOWN' ? '▼ DOWN' : '◆ NEUTRAL';
+}
+function dirClass(dir) {
+  return dir === 'UP' ? 'up' : dir === 'DOWN' ? 'down' : 'neutral';
+}
+
+function renderResults(pred, market, data) {
+  const e = pred.ensemble;
+  const models = [
+    { key: 'xgboost', label: 'XGBoost', cls: 'xgb', color: 'var(--accent)' },
+    { key: 'lightgbm', label: 'LightGBM', cls: 'lgb', color: 'var(--purple)' },
+    { key: 'neural_net', label: 'Neural Net', cls: 'nn', color: 'var(--gold)' }
+  ];
+
+  // Model cards
+  document.getElementById('model-results').innerHTML = models.map(m => {
+    const md = pred[m.key];
+    if (!md) return '';
+    return `
+    <div class="model-card ${m.cls}">
+      <div class="model-name">${m.label}</div>
+      <div class="model-direction ${dirClass(md.direction)}">${dirEmoji(md.direction)}</div>
+      <div class="model-conf" style="color:${m.color}">${md.confidence}% confident</div>
+      <div class="conf-bar">
+        <div class="conf-fill" style="width:${md.confidence}%;background:${m.color}"></div>
+      </div>
+      <div style="font-size:11px;color:var(--dim);margin-top:8px">${md.reasoning || ''}</div>
+    </div>`;
+  }).join('');
+
+  // Ensemble
+  document.getElementById('ensemble-result').innerHTML = `
+    <div class="ensemble-top">
+      <div class="ensemble-signal ${dirClass(e.direction)}">${dirEmoji(e.direction)}</div>
+      <div class="ensemble-details">
+        <div class="ensemble-conf-big" style="color:${dirColor(e.direction)}">${e.confidence}% Confidence</div>
+        <div class="ensemble-label">${e.strength || ''} SIGNAL • ${e.time_horizon || ''}</div>
+      </div>
+    </div>`;
+
+  // Price targets
+  const currency = market === 'property' ? '₹' : market === 'gold' ? '$' : '$';
+  document.getElementById('price-targets-section').innerHTML = `
+    <div class="price-targets" style="margin-bottom:20px">
+      <div class="target-card">
+        <div class="target-label">Target 1</div>
+        <div class="target-price" style="color:var(--green)">${currency}${e.target_1 || 'N/A'}</div>
+      </div>
+      <div class="target-card">
+        <div class="target-label">Target 2</div>
+        <div class="target-price" style="color:var(--green)">${currency}${e.target_2 || 'N/A'}</div>
+      </div>
+      <div class="target-card">
+        <div class="target-label">Stop Loss</div>
+        <div class="target-price" style="color:var(--red)">${currency}${e.stop_loss || 'N/A'}</div>
+      </div>
+    </div>`;
+
+  // Analysis
+  document.getElementById('analysis-box').innerHTML = `
+    <div class="analysis-title">▸ AI Analysis</div>
+    <div class="analysis-text">${e.analysis || 'Analysis unavailable'}</div>`;
+
+  // Signals
+  const signals = e.signals || [];
+  document.getElementById('signals-grid').innerHTML = signals.map(s => `
+    <div class="signal-item">
+      <div class="signal-dot ${s.bullish ? 'bull' : 'bear'}"></div>
+      <div>
+        <div class="signal-name">${s.name}</div>
+        <div class="signal-text">${s.value}</div>
+      </div>
+    </div>`).join('');
+
+  // Risk
+  const rlColor = e.risk_level === 'LOW' ? 'var(--green)' : e.risk_level === 'HIGH' ? 'var(--red)' : 'var(--gold)';
+  document.getElementById('risk-section').innerHTML = `
+    <div class="risk-card">
+      <div class="risk-title">Risk Level</div>
+      <div class="risk-value" style="color:${rlColor}">${e.risk_level || 'MEDIUM'}</div>
+      <div class="risk-desc">Portfolio risk assessment</div>
+    </div>
+    <div class="risk-card">
+      <div class="risk-title">Risk : Reward</div>
+      <div class="risk-value" style="color:var(--accent)">${e.risk_reward || '1:2'}</div>
+      <div class="risk-desc">Expected ratio per trade</div>
+    </div>`;
+}
+</script>
+</body>
+</html>
